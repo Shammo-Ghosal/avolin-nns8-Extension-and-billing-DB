@@ -1,0 +1,80 @@
+version: v4.0
+navigator:
+    name: Artem Pylypchuk
+    email: artem.pylypchuk@trilogy.com
+repo:
+    companyName: Avolin
+    productName: NNS8
+    repoUrl: https://github.com/trilogy-group/newnet-lithium-text-insertion-engine-service
+    repoType: Deployable service
+    githubTokenSecretId: ""
+    branch: main
+buildDeps: []
+buildEnvVars:
+    - key: VERSION_NUMBER
+      kind: config
+      value: 1.0.0
+    - key: NEXUS_REPO
+      kind: config
+      value: lithium2-raw-release
+build:
+    techStack: C
+    os: Centos 7
+    image: registry2.swarm.devfactory.com/lithium/centos:7-official
+    toolchainVersion: cmake
+    tool: cmake
+    preBuildCommand: chmod +x+r ./devhub/pre-build.sh && ./devhub/pre-build.sh
+    buildCommand: chmod +x+r ./devhub/build.sh && ./devhub/build.sh
+test:
+    utFramework: cunit
+    preTestCommand: echo "No pre-test actions"
+    testCommand: echo "No test actions"
+package:
+    packageTool: tar
+    packageCommand: chmod +x+r ./devhub/package.sh && ./devhub/package.sh
+    artifactDir: dist
+    artifactUploadCommand: chmod +x+r ./devhub/nexus.sh && ./devhub/nexus.sh
+    deploy:
+    serviceName: text-insertion-engine-service
+    deploymentCheck: devhub/healthcheck.sh
+    stickySessions: "false"
+    canUseLb: "false"
+    stablePersistence: "false"
+    fixedNetworkIdentifier: "false"
+run:
+    dockerized: true
+    os: centos:7
+    runCommand: echo skip
+    installCommand: echo skip
+    userName: root
+ports:
+    - name: http8080
+      number: 8080
+      protocol: HTTP
+      public: true
+      path: /
+envs:
+    - name: qa
+      default: true
+      vars: 
+        - Key: TF_VAR_Environment
+          kind: config
+          value: qa
+        - key: TF_VAR_AWS_SECRET_KEY
+          kind: secret
+          value: devhub-import/env/ENGBUILD_GITHUB_PASSWORD/dev
+        - key: TF_VAR_AWS_ACCESS_KEY
+          kind: secret
+          value: devhub-import/env/NS8_TERRAFORM_USER_ACCESS_KEY
+    - name: staging
+      default: false
+      vars: 
+        - Key: TF_VAR_Environment
+          kind: config
+          value: staging
+        - key: TF_VAR_AWS_SECRET_KEY
+          kind: secret
+          value: devhub-import/env/ENGBUILD_GITHUB_PASSWORD/dev
+        - key: TF_VAR_AWS_ACCESS_KEY
+          kind: secret
+          value: devhub-import/env/NS8_TERRAFORM_USER_ACCESS_KEY
